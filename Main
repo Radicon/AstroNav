@@ -1,0 +1,656 @@
+// Example program
+#include <iostream>
+#include <iomanip>
+#include <string>
+#include <sstream>
+#include <fstream>
+#include <math.h>
+using namespace std;
+
+int main()
+{
+    string fName;
+    string region;
+    stringstream fNameSS;
+
+    // Galactic Coordinate Ints
+    unsigned long long int GX;
+    unsigned long long int GY;
+    unsigned long long int GZ;
+    unsigned long long int GC;
+
+    // Distance from Sag A* calculation integers
+    unsigned long long int distX;
+    unsigned long long int distY;
+    unsigned long long int distZ;
+    unsigned long long int distC;
+
+    // Sector ints
+    int HX;
+    int HY;
+    int HZ;
+    int HXD;
+    int HYD;
+    int HZD;
+
+    // GC individual digits
+    int dig[16];
+    //int dig0;
+    //int dig1;
+    //int dig2;
+    //int dig3;
+    //int dig4;
+    //int dig5;
+    //int dig6;
+    //int dig7;
+    //int dig8;
+    //int dig9;
+    //int digA;
+    //int digB;
+    //int digC;
+    //int digD;
+    //int digE;
+    //int digF;
+
+    //AlphGC
+    string alph[16];
+
+    //R Variables
+    int LGX;
+    int LGY;
+    int LGZ;
+    int RX [10];
+    int RY [10];
+    int RZ [10];
+
+    //Variables for Star determination
+    float starCalc;
+    float star1;
+    float star2;
+    float star3;
+    float star4;
+    string starType;
+
+    //Variables for Brown Dwarf determination
+    float brownDwarf;
+    float bd1;
+    float bd2;
+    float bd3;
+    float bd4;
+    string bdType;
+
+    //Prompts to request XYZ
+    //cout << "Enter X Coord: " <<endl;
+    //cin >> GX;
+    //cout << "Enter Y Coord: " <<endl;
+    //cin >> GY;
+    //cout << "Enter Z Coord: " <<endl;
+    //cin >> GZ;
+
+    //Prompts to request Sector XYZ
+    cout << "Enter Sector X Grid: " << flush;
+    cin >> HX;
+    cout << "Enter Sector Y Grid: " << flush;
+    cin >> HY;
+    cout << "Enter Sector Z Grid: " << flush;
+    cin >> HZ;
+
+    //Calculates GX,GY,GZ from Hcoords
+    GX = (HX * 16) - 15;
+    GY = (HY * 16) + 100000 - 15;
+    GZ = (HZ * 16) + 200000 - 15;
+
+    //Calculates end Sectors
+    HXD = HX + 10;
+    HYD = HY + 10;
+    HZD = HZ + 10;
+
+    cout << "Star Calculations for Sectors: " << HX << "." << HY << "." << HZ << ":" << HXD << "." << HYD << "." << HZD << endl;
+    //cout << "Enter filename (end with .txt):" << flush;
+    //cin >> fName;
+
+    fNameSS << HX << HY << HZ << ".txt";
+    fName += fNameSS.str();
+
+    ofstream myfile;
+    myfile.open (fName.c_str());
+
+    myfile << HX << "." << HY << "." << HZ << ":" << HXD << "." << HYD << "." << HZD << endl;
+
+    for (int alpha = 1; alpha <161; alpha++){
+        for (int beta = 1; beta <161; beta++){
+            for (int ceti = 1; ceti <161; ceti++){
+                //Calculates GC from GX,GY,GZ
+                GC = GX * GY;
+                GC = GC * GZ;
+                //Calculates Distance from Sagittarius A*
+                distX = (50000-GX) * (50000-GX);
+                distY = (150000-GY) * (150000-GY);
+                distZ = (250000-GZ) * (250000-GZ);
+                distC = sqrt(distX+distY+distZ);
+                //Calculates Galactic Region
+                if(GZ <= 251060 && GZ >= 248940){
+                    if(distC <= 32){region = "Galactic Center";}
+                    else if(distC <= 6523 && GZ <= 251304 && GZ >= 248696){region = "Central Bulge";}
+                    else {region = "Thin Disk";}
+                }
+                else if(GZ <= 254566 && GZ >= 245434){
+                    if(distC <= 32){region = "Galactic Center";}
+                    else if(distC <= 6523 && GZ <= 251304 && GZ >= 248696){region = "Central Bulge";}
+                    else {region = "Thick Disk";}
+                }
+                else {
+                    region = "Galactic Halo";
+                }
+
+                //Creates variable for each digit of GC for use.
+                dig[0] = GC / 1000000000000000;
+                dig[1] = GC / 100000000000000 % 10;
+                dig[2] = GC / 10000000000000 % 10;
+                dig[3] = GC / 1000000000000 % 10;
+                dig[4] = GC / 100000000000 % 10;
+                dig[5] = GC / 10000000000 % 10;
+                dig[6] = GC / 1000000000 % 10;
+                dig[7] = GC / 100000000 % 10;
+                dig[8] = GC / 10000000 % 10;
+                dig[9] = GC / 1000000 % 10;
+                dig[10] = GC / 100000 % 10;
+                dig[11] = GC / 10000 % 10;
+                dig[12] = GC / 1000 % 10;
+                dig[13] = GC / 100 % 10;
+                dig[14] = GC / 10 % 10;
+                dig[15] = GC % 10;
+
+                //Creates AlphaGCGen Variables
+                for (int n = 0; n < 16; n++){
+                    if(n == 0) {
+                            //Odd-Odd computation for 0
+                        if (dig[15] % 2 != 0 && dig[1] % 2 != 0){
+                            switch(dig[n]){
+                            case 0 :
+                                alph[n] = "A";
+                                break;
+                            case 1 :
+                                alph[n] = "B";
+                                break;
+                            case 2 :
+                                alph[n] = "C";
+                                break;
+                            case 3 :
+                                alph[n] = "D";
+                                break;
+                            case 4 :
+                                alph[n] = "E";
+                                break;
+                            case 5 :
+                                alph[n] = "F";
+                                break;
+                            case 6 :
+                                alph[n] = "G";
+                                break;
+                            case 7 :
+                                alph[n] = "H";
+                                break;
+                            case 8 :
+                                alph[n] = "I";
+                                break;
+                            default :
+                                alph[n] = "J";
+                                }//switch end
+                        }//odd-odd 0 dig end
+                        if (dig[15] % 2 != 0 && dig[1] % 2 == 0){
+                            switch(dig[n]){
+                            case 0 :
+                                alph[n] = "a";
+                                break;
+                            case 1 :
+                                alph[n] = "b";
+                                break;
+                            case 2 :
+                                alph[n] = "c";
+                                break;
+                            case 3 :
+                                alph[n] = "d";
+                                break;
+                            case 4 :
+                                alph[n] = "e";
+                                break;
+                            case 5 :
+                                alph[n] = "f";
+                                break;
+                            case 6 :
+                                alph[n] = "g";
+                                break;
+                            case 7 :
+                                alph[n] = "h";
+                                break;
+                            case 8 :
+                                alph[n] = "i";
+                                break;
+                            default :
+                                alph[n] = "j";
+                                }//switch end
+                        }//odd-even 0 dig end
+                        if (dig[15] % 2 == 0 && dig[1] % 2 ==0){
+                            switch(dig[n]){
+                            case 0 :
+                                alph[n] = "K";
+                                break;
+                            case 1 :
+                                alph[n] = "L";
+                                break;
+                            case 2 :
+                                alph[n] = "M";
+                                break;
+                            case 3 :
+                                alph[n] = "N";
+                                break;
+                            case 4 :
+                                alph[n] = "E";
+                                break;
+                            case 5 :
+                                alph[n] = "F";
+                                break;
+                            case 6 :
+                                alph[n] = "G";
+                                break;
+                            case 7 :
+                                alph[n] = "H";
+                                break;
+                            case 8 :
+                                alph[n] = "I";
+                                break;
+                            default :
+                                alph[n] = "J";
+                                }//switch end
+                        }//even-even 0 dig end
+                        if(dig[15] % 2 == 0 && dig[1] % 2 != 0){
+                            switch(dig[n]){
+                            case 0 :
+                                alph[n] = "k";
+                                break;
+                            case 1 :
+                                alph[n] = "l";
+                                break;
+                            case 2 :
+                                alph[n] = "m";
+                                break;
+                            case 3 :
+                                alph[n] = "n";
+                                break;
+                            case 4 :
+                                alph[n] = "o";
+                                break;
+                            case 5 :
+                                alph[n] = "p";
+                                break;
+                            case 6 :
+                                alph[n] = "q";
+                                break;
+                            case 7 :
+                                alph[n] = "r";
+                                break;
+                            case 8 :
+                                alph[n] = "s";
+                                break;
+                            default :
+                                alph[n] = "t";
+                                }//switch end
+                        }//even-odd 0 dig end
+                    }//n == 0 if end
+                    else if(n == 15) {
+                        if (dig[14] % 2 != 0 && dig[0] % 2 != 0){
+                            switch(dig[n]){
+                            case 0 :
+                                alph[n] = "A";
+                                break;
+                            case 1 :
+                                alph[n] = "B";
+                                break;
+                            case 2 :
+                                alph[n] = "C";
+                                break;
+                            case 3 :
+                                alph[n] = "D";
+                                break;
+                            case 4 :
+                                alph[n] = "E";
+                                break;
+                            case 5 :
+                                alph[n] = "F";
+                                break;
+                            case 6 :
+                                alph[n] = "G";
+                                break;
+                            case 7 :
+                                alph[n] = "H";
+                                break;
+                            case 8 :
+                                alph[n] = "I";
+                                break;
+                            default :
+                                alph[n] = "J";
+                                }//switch end
+                        }//odd-odd 15 dig end
+                        if (dig[14] % 2 != 0 && dig[0] % 2 == 0){
+                            switch(dig[n]){
+                            case 0 :
+                                alph[n] = "a";
+                                break;
+                            case 1 :
+                                alph[n] = "b";
+                                break;
+                            case 2 :
+                                alph[n] = "c";
+                                break;
+                            case 3 :
+                                alph[n] = "d";
+                                break;
+                            case 4 :
+                                alph[n] = "e";
+                                break;
+                            case 5 :
+                                alph[n] = "f";
+                                break;
+                            case 6 :
+                                alph[n] = "g";
+                                break;
+                            case 7 :
+                                alph[n] = "h";
+                                break;
+                            case 8 :
+                                alph[n] = "i";
+                                break;
+                            default :
+                                alph[n] = "j";
+                                }//switch end
+                        }//odd-even 15 dig end
+                        if (dig[14] % 2 == 0 && dig[0] % 2 ==0){
+                            switch(dig[n]){
+                            case 0 :
+                                alph[n] = "K";
+                                break;
+                            case 1 :
+                                alph[n] = "L";
+                                break;
+                            case 2 :
+                                alph[n] = "M";
+                                break;
+                            case 3 :
+                                alph[n] = "N";
+                                break;
+                            case 4 :
+                                alph[n] = "E";
+                                break;
+                            case 5 :
+                                alph[n] = "F";
+                                break;
+                            case 6 :
+                                alph[n] = "G";
+                                break;
+                            case 7 :
+                                alph[n] = "H";
+                                break;
+                            case 8 :
+                                alph[n] = "I";
+                                break;
+                            default :
+                                alph[n] = "J";
+                                }//switch end
+                        }//even-even 15 dig end
+                        if(dig[14] % 2 == 0 && dig[0] % 2 != 0){
+                            switch(dig[n]){
+                            case 0 :
+                                alph[n] = "k";
+                                break;
+                            case 1 :
+                                alph[n] = "l";
+                                break;
+                            case 2 :
+                                alph[n] = "m";
+                                break;
+                            case 3 :
+                                alph[n] = "n";
+                                break;
+                            case 4 :
+                                alph[n] = "o";
+                                break;
+                            case 5 :
+                                alph[n] = "p";
+                                break;
+                            case 6 :
+                                alph[n] = "q";
+                                break;
+                            case 7 :
+                                alph[n] = "r";
+                                break;
+                            case 8 :
+                                alph[n] = "s";
+                                break;
+                            default :
+                                alph[n] = "t";
+                                }//switch end
+                        }//even-odd 15 dig end
+                    }//n == 15 if end
+                     else {
+                        if (dig[n-1] % 2 != 0 && dig[n+1] % 2 != 0){
+                            switch(dig[n]){
+                            case 0 :
+                                alph[n] = "A";
+                                break;
+                            case 1 :
+                                alph[n] = "B";
+                                break;
+                            case 2 :
+                                alph[n] = "C";
+                                break;
+                            case 3 :
+                                alph[n] = "D";
+                                break;
+                            case 4 :
+                                alph[n] = "E";
+                                break;
+                            case 5 :
+                                alph[n] = "F";
+                                break;
+                            case 6 :
+                                alph[n] = "G";
+                                break;
+                            case 7 :
+                                alph[n] = "H";
+                                break;
+                            case 8 :
+                                alph[n] = "I";
+                                break;
+                            default :
+                                alph[n] = "J";
+                                }//switch end
+                        }//odd-odd 15 dig end
+                        if (dig[n-1] % 2 != 0 && dig[n+1] % 2 == 0){
+                            switch(dig[n]){
+                            case 0 :
+                                alph[n] = "a";
+                                break;
+                            case 1 :
+                                alph[n] = "b";
+                                break;
+                            case 2 :
+                                alph[n] = "c";
+                                break;
+                            case 3 :
+                                alph[n] = "d";
+                                break;
+                            case 4 :
+                                alph[n] = "e";
+                                break;
+                            case 5 :
+                                alph[n] = "f";
+                                break;
+                            case 6 :
+                                alph[n] = "g";
+                                break;
+                            case 7 :
+                                alph[n] = "h";
+                                break;
+                            case 8 :
+                                alph[n] = "i";
+                                break;
+                            default :
+                                alph[n] = "j";
+                                }//switch end
+                        }//odd-even 15 dig end
+                        if (dig[n-1] % 2 == 0 && dig[n+1] % 2 ==0){
+                            switch(dig[n]){
+                            case 0 :
+                                alph[n] = "K";
+                                break;
+                            case 1 :
+                                alph[n] = "L";
+                                break;
+                            case 2 :
+                                alph[n] = "M";
+                                break;
+                            case 3 :
+                                alph[n] = "N";
+                                break;
+                            case 4 :
+                                alph[n] = "E";
+                                break;
+                            case 5 :
+                                alph[n] = "F";
+                                break;
+                            case 6 :
+                                alph[n] = "G";
+                                break;
+                            case 7 :
+                                alph[n] = "H";
+                                break;
+                            case 8 :
+                                alph[n] = "I";
+                                break;
+                            default :
+                                alph[n] = "J";
+                                }//switch end
+                        }//even-even 15 dig end
+                        if(dig[n-1] % 2 == 0 && dig[n+1] % 2 != 0){
+                            switch(dig[n]){
+                            case 0 :
+                                alph[n] = "k";
+                                break;
+                            case 1 :
+                                alph[n] = "l";
+                                break;
+                            case 2 :
+                                alph[n] = "m";
+                                break;
+                            case 3 :
+                                alph[n] = "n";
+                                break;
+                            case 4 :
+                                alph[n] = "o";
+                                break;
+                            case 5 :
+                                alph[n] = "p";
+                                break;
+                            case 6 :
+                                alph[n] = "q";
+                                break;
+                            case 7 :
+                                alph[n] = "r";
+                                break;
+                            case 8 :
+                                alph[n] = "s";
+                                break;
+                            default :
+                                alph[n] = "t";
+                                }//switch end
+                        }//even-odd 15 dig end
+                    }//n == 15 if end
+                }//AlphaCGGen loop end
+
+
+
+
+                //Creates lG variables
+                LGX = GX % 10;
+                LGY = GY % 10;
+                LGZ = GZ % 10;
+
+            //Creates RX variables
+            for (int rxc=0; rxc < 10; rxc ++){
+                RX[rxc] = LGX + rxc;
+                if(RX[rxc] > 9){
+                    RX[rxc] = RX[rxc] % 10;
+                }
+            }
+
+            //Creates RY variables
+            for (int ryc=0; ryc < 10; ryc ++){
+                RY[ryc] = LGY + ryc;
+                if(RY[ryc]>9){
+                RY[ryc] = RY[ryc] % 10;
+                }
+            }
+
+            //Creates RZ variables
+            for (int rzc=0; rzc <10; rzc ++){
+                RZ[rzc] = LGZ + rzc;
+                if(RZ[rzc]>9){
+                    RZ[rzc] = RZ[rzc] % 10;
+                }
+            }
+
+            //Create starCalc
+            star1 = (float)RX[dig[5]] * 10;
+            star2 = (float)RY[dig[10]];
+            star3 = (float)RZ[dig[6]] /10;
+            star4 = (float)RX [dig[9]] /100;
+            starCalc = star1 + star2 + star3 + star4;
+
+            //create brownDwarf
+            bd1 = (float)RY[dig[8]] * 10;
+            bd2 = (float)RZ[dig[7]];
+            bd3 = (float)RX[dig[14]] /10;
+            bd4 = (float)RY[dig[11]] /100;
+            brownDwarf = bd1 + bd2 + bd3 + bd4;
+
+            if(starCalc <= 0.40){
+                if(brownDwarf <= 80){starType="Class MV";}
+                else if(brownDwarf <= 88 && brownDwarf > 80){starType="Class KV";}
+                else if(brownDwarf <= 93 && brownDwarf > 88){starType="Class W-D";}
+                else if(brownDwarf <= 96.5 && brownDwarf > 93){starType="Class GV";}
+                else if(brownDwarf <= 98.5 && brownDwarf > 96.5){starType="Class FV";}
+                else if(brownDwarf <=99.2 && brownDwarf > 98){starType="Class AV";}
+                else if(brownDwarf <= 99.6 && brownDwarf > 99.2){starType="Class MIII";}
+                else if(brownDwarf <= 99.9 && brownDwarf > 99.6){starType="EE";}
+                else {starType="Class BV";}
+                cout << setfill('0') << setw(6) << GX << ":" << GY << ":" << GZ << " | " << setfill('0') << setw(16) << GC << " StarCalc: " << setfill('0') << setw(4) << starCalc << " | Type: " << starType << " | " << alph[0] << alph[1] << alph[2] << alph[3] << alph[4] << alph[5] << alph[6] << alph[7] << alph[8] << alph[9] << alph[10] << alph[11] << alph[12] << alph[13] << alph[14] << alph[15] << " | " << distC << " | " << region << endl;
+                myfile << setfill('0') << setw(6) << GX << ":" << GY << ":" << GZ << " | " << setfill('0') << setw(16) << GC << " StarCalc: " << setfill('0') << setw(4) << starCalc << " | Type: " << starType << " | " << alph[0] << alph[1] << alph[2] << alph[3] << alph[4] << alph[5] << alph[6] << alph[7] << alph[8] << alph[9] << alph[10] << alph[11] << alph[12] << alph[13] << alph[14] << alph[15] << " | " << distC << " | " << region <<   endl;
+                }
+
+
+            if(starCalc > 0.40){
+                if(starCalc <= 50){bdType="Class L";}
+                if(starCalc > 50){bdType="Class T";}
+                if(brownDwarf <=0.08){
+                    cout << setfill('0') << setw(6) << GX << ":" << GY << ":" << GZ << " | " << setfill('0') << setw(16) << GC << " BrownDwarf: " << setfill('0') << setw(4) << brownDwarf << " | Type: " << bdType << " | " << alph[0] << alph[1] << alph[2] << alph[3] << alph[4] << alph[5] << alph[6] << alph[7] << alph[8] << alph[9] << alph[10] << alph[11] << alph[12] << alph[13] << alph[14] << alph[15] << " | " << distC << " | " << region <<   endl;
+                    myfile << setfill('0') << setw(6) << GX << ":" << GY << ":" << GZ << " | " << setfill('0') << setw(16) << GC << " BrownDwarf: " << setfill('0') << setw(4) << brownDwarf << " | Type: " << bdType << " | " << alph[0] << alph[1] << alph[2] << alph[3] << alph[4] << alph[5] << alph[6] << alph[7] << alph[8] << alph[9] << alph[10] << alph[11] << alph[12] << alph[13] << alph[14] << alph[15] << " | " << distC << " | " << region <<   endl;
+                }
+            }
+
+            GZ = GZ + 1;
+            }//ceti loop end
+        GZ = (HZ * 16) + 200000 - 15;
+        GY = GY + 1;
+        }//beta loop end
+    GZ = (HZ * 16) + 200000 - 15;
+    GY = (HY * 16) + 100000 - 15;
+    GX = GX + 1;
+    }
+
+    return 0;
+
+
+}
+
+
