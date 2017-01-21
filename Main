@@ -1,4 +1,3 @@
-// Example program
 #include <iostream>
 #include <iomanip>
 #include <string>
@@ -7,11 +6,8 @@
 #include <math.h>
 using namespace std;
 
-int main()
-{
-    string fName;
-    string region;
-    stringstream fNameSS;
+
+
 
     // Galactic Coordinate Ints
     unsigned long long int GX;
@@ -20,12 +16,45 @@ int main()
     unsigned long long int GC;
 
     // Distance from Sag A* calculation integers
-    unsigned long long int distX;
-    unsigned long long int distY;
-    unsigned long long int distZ;
     unsigned long long int distC;
 
-    // Sector ints
+    // Sub-sector region string
+    string ssRegion;
+
+    //Star Variables
+    string starPresent;
+    string starType;
+
+    //GC digit array
+    int dig[16];
+
+    //AlphGC array & output
+    string alph[16];
+    stringstream alphaSS;
+    string alphaComb;
+
+    //R variables (used to create numbers for calculating random odds from the GC).
+    int RX[10];
+    int RY[10];
+    int RZ[10];
+
+    unsigned long long int calcGC(unsigned long long int GX, unsigned long long int GY, unsigned long long int GZ);
+    unsigned long long int calcDistSA(unsigned long long int GX, unsigned long long int GY, unsigned long long int GZ);
+    string sRegion(unsigned long long int GX, unsigned long long int GY, unsigned long long int GZ, unsigned long long int distC);
+    void digCalc(unsigned long long int GC);
+    void alphaCalc();
+    void alphaBuild();
+    void rVariables();
+    void starSearch();
+    void starDefine();
+
+int main()
+{
+    //File name variables
+    string fName;
+    stringstream fNameSS;
+
+    //Sector variables
     int HX;
     int HY;
     int HZ;
@@ -33,59 +62,6 @@ int main()
     int HYD;
     int HZD;
 
-    // GC individual digits
-    int dig[16];
-    //int dig0;
-    //int dig1;
-    //int dig2;
-    //int dig3;
-    //int dig4;
-    //int dig5;
-    //int dig6;
-    //int dig7;
-    //int dig8;
-    //int dig9;
-    //int digA;
-    //int digB;
-    //int digC;
-    //int digD;
-    //int digE;
-    //int digF;
-
-    //AlphGC
-    string alph[16];
-
-    //R Variables
-    int LGX;
-    int LGY;
-    int LGZ;
-    int RX [10];
-    int RY [10];
-    int RZ [10];
-
-    //Variables for Star determination
-    float starCalc;
-    float star1;
-    float star2;
-    float star3;
-    float star4;
-    string starType;
-
-    //Variables for Brown Dwarf determination
-    float brownDwarf;
-    float bd1;
-    float bd2;
-    float bd3;
-    float bd4;
-    string bdType;
-
-    //Prompts to request XYZ
-    //cout << "Enter X Coord: " <<endl;
-    //cin >> GX;
-    //cout << "Enter Y Coord: " <<endl;
-    //cin >> GY;
-    //cout << "Enter Z Coord: " <<endl;
-    //cin >> GZ;
 
     //Prompts to request Sector XYZ
     cout << "Enter Sector X Grid: " << flush;
@@ -95,76 +71,142 @@ int main()
     cout << "Enter Sector Z Grid: " << flush;
     cin >> HZ;
 
+    HXD = HX + 10;
+    HYD = HY + 10;
+    HZD = HZ + 10;
+
     //Calculates GX,GY,GZ from Hcoords
     GX = (HX * 16) - 15;
     GY = (HY * 16) + 100000 - 15;
     GZ = (HZ * 16) + 200000 - 15;
 
-    //Calculates end Sectors
-    HXD = HX + 10;
-    HYD = HY + 10;
-    HZD = HZ + 10;
-
-    cout << "Star Calculations for Sectors: " << HX << "." << HY << "." << HZ << ":" << HXD << "." << HYD << "." << HZD << endl;
-    //cout << "Enter filename (end with .txt):" << flush;
-    //cin >> fName;
-
-    fNameSS << HX << HY << HZ << ".txt";
+    //Output to screen to tell you what starting sector will be, then create filename
+    cout << "Calculations starting with Sectors: " << hex << uppercase << HX << "." << HY << "." << HZ << dec << nouppercase << endl;
+    fNameSS << hex << uppercase << HX << HY << HZ << ".txt" << dec << nouppercase;
     fName += fNameSS.str();
 
+    //create and open file
     ofstream myfile;
     myfile.open (fName.c_str());
 
-    myfile << HX << "." << HY << "." << HZ << ":" << HXD << "." << HYD << "." << HZD << endl;
+    //write starting and ending sector to file
+    myfile << "Starting Sector: " << hex << uppercase << HX << "." << HY << "." << HZ << dec << nouppercase << endl;
+    myfile << "Ending Sector: " << hex << uppercase << HXD << "." << HYD << "." << HZD << dec << nouppercase << endl;
 
     for (int alpha = 1; alpha <161; alpha++){
         for (int beta = 1; beta <161; beta++){
             for (int ceti = 1; ceti <161; ceti++){
-                //Calculates GC from GX,GY,GZ
-                GC = GX * GY;
-                GC = GC * GZ;
-                //Calculates Distance from Sagittarius A*
-                distX = (50000-GX) * (50000-GX);
-                distY = (150000-GY) * (150000-GY);
-                distZ = (250000-GZ) * (250000-GZ);
-                distC = sqrt(distX+distY+distZ);
-                //Calculates Galactic Region
+                GC = calcGC(GX,GY,GZ);
+                distC = calcDistSA(GX,GY,GZ);
+                ssRegion = sRegion(GX,GY,GZ,distC);
+                digCalc(GC);
+                alphaCalc();
+                alphaBuild();
+                rVariables();
+                starSearch();
+                starDefine();
+
+                if(starPresent != "No"){
+                cout << alphaComb << "|" << setfill('0') << setw(6) << GX << "." << GY << "." << GZ << "|" << setfill('0') << setw(16) << GC << "|" << setfill(' ') << setw(15) << ssRegion << "|Class: " << setfill(' ') << setw(4) << starType << flush << endl;
+                myfile << alphaComb << "|" << setfill('0') << setw(6) << GX << "." << GY << "." << GZ << "|" << setfill('0') << setw(16) << GC << "|" <<  setfill(' ') << setw(15) << ssRegion << "|Class: " << setfill(' ') << setw(4) << starType << endl;
+                }
+                GZ = GZ + 1;
+            }//ceti loop end
+            GZ = (HZ * 16) + 200000 - 15;
+            GY = GY + 1;
+        }//beta loop end
+        GZ = (HZ * 16) + 200000 - 15;
+        GY = (HY * 16) + 100000 - 15;
+        GX = GX + 1;
+    }//alpha loop end
+    myfile.close();
+    return 0;
+}
+
+//This function calculates a sub-sector's GC using GX,GY,GZ for input
+unsigned long long int calcGC(unsigned long long int GX, unsigned long long int GY, unsigned long long int GZ)
+{
+    unsigned long long int locGX;
+    unsigned long long int locGY;
+    unsigned long long int locGZ;
+    unsigned long long int locGC;
+
+    locGX = GX;
+    locGY = GY;
+    locGZ = GZ;
+
+    locGC = locGX * locGY;
+    locGC = locGC * locGZ;
+    return locGC;
+}
+
+//This function calculates a sub-sector's distance from Sagittarius A* using GX,GY,GZ for input
+unsigned long long int calcDistSA(unsigned long long int GX, unsigned long long int GY, unsigned long long int GZ)
+{
+    unsigned long long int distX;
+    unsigned long long int distY;
+    unsigned long long int distZ;
+    unsigned long long int locDistC;
+
+    distX = (50000-GX) * (50000-GX);
+    distY = (150000-GY) * (150000-GY);
+    distZ = (250000-GZ) * (250000-GZ);
+    locDistC = sqrt(distX+distY+distZ);
+    return locDistC;
+}
+
+string sRegion(unsigned long long int GX, unsigned long long int GY, unsigned long long int GZ, unsigned long long int distC)
+{
+	unsigned long long int distX;
+    unsigned long long int distY;
+    unsigned long long int distZ;
+    unsigned long long int locDistC;
+
+	string region;
+
+ //Calculates Galactic Region
                 if(GZ <= 251060 && GZ >= 248940){
-                    if(distC <= 32){region = "Galactic Center";}
-                    else if(distC <= 6523 && GZ <= 251304 && GZ >= 248696){region = "Central Bulge";}
+                    if(locDistC <= 32){region = "Galactic Center";}
+                    else if(locDistC <= 6523 && GZ <= 251304 && GZ >= 248696){region = "Central Bulge";}
                     else {region = "Thin Disk";}
                 }
                 else if(GZ <= 254566 && GZ >= 245434){
-                    if(distC <= 32){region = "Galactic Center";}
-                    else if(distC <= 6523 && GZ <= 251304 && GZ >= 248696){region = "Central Bulge";}
+                    if(locDistC <= 32){region = "Galactic Center";}
+                    else if(locDistC <= 6523 && GZ <= 251304 && GZ >= 248696){region = "Central Bulge";}
                     else {region = "Thick Disk";}
                 }
                 else {
                     region = "Galactic Halo";
                 }
+	return region;
+}
 
-                //Creates variable for each digit of GC for use.
-                dig[0] = GC / 1000000000000000;
-                dig[1] = GC / 100000000000000 % 10;
-                dig[2] = GC / 10000000000000 % 10;
-                dig[3] = GC / 1000000000000 % 10;
-                dig[4] = GC / 100000000000 % 10;
-                dig[5] = GC / 10000000000 % 10;
-                dig[6] = GC / 1000000000 % 10;
-                dig[7] = GC / 100000000 % 10;
-                dig[8] = GC / 10000000 % 10;
-                dig[9] = GC / 1000000 % 10;
-                dig[10] = GC / 100000 % 10;
-                dig[11] = GC / 10000 % 10;
-                dig[12] = GC / 1000 % 10;
-                dig[13] = GC / 100 % 10;
-                dig[14] = GC / 10 % 10;
-                dig[15] = GC % 10;
+//Calculates GC digits
+void digCalc(unsigned long long int GC)
+{
+    dig[0] = GC / 1000000000000000;
+    dig[1] = GC / 100000000000000 % 10;
+    dig[2] = GC / 10000000000000 % 10;
+    dig[3] = GC / 1000000000000 % 10;
+    dig[4] = GC / 100000000000 % 10;
+    dig[5] = GC / 10000000000 % 10;
+    dig[6] = GC / 1000000000 % 10;
+    dig[7] = GC / 100000000 % 10;
+    dig[8] = GC / 10000000 % 10;
+    dig[9] = GC / 1000000 % 10;
+    dig[10] = GC / 100000 % 10;
+    dig[11] = GC / 10000 % 10;
+    dig[12] = GC / 1000 % 10;
+    dig[13] = GC / 100 % 10;
+    dig[14] = GC / 10 % 10;
+    dig[15] = GC % 10;
+}
 
-                //Creates AlphaGCGen Variables
-                for (int n = 0; n < 16; n++){
+void alphaCalc()
+{
+    for (int n = 0; n < 16; n++){
                     if(n == 0) {
-                            //Odd-Odd computation for 0
+                            //Odd-Odd computation for dig[0]
                         if (dig[15] % 2 != 0 && dig[1] % 2 != 0){
                             switch(dig[n]){
                             case 0 :
@@ -197,7 +239,7 @@ int main()
                             default :
                                 alph[n] = "J";
                                 }//switch end
-                        }//odd-odd 0 dig end
+                        }//Odd-Even for dig[0]
                         if (dig[15] % 2 != 0 && dig[1] % 2 == 0){
                             switch(dig[n]){
                             case 0 :
@@ -230,7 +272,7 @@ int main()
                             default :
                                 alph[n] = "j";
                                 }//switch end
-                        }//odd-even 0 dig end
+                        }//even-even 0 dig end
                         if (dig[15] % 2 == 0 && dig[1] % 2 ==0){
                             switch(dig[n]){
                             case 0 :
@@ -263,7 +305,7 @@ int main()
                             default :
                                 alph[n] = "J";
                                 }//switch end
-                        }//even-even 0 dig end
+                        }//even-odd dig[0]
                         if(dig[15] % 2 == 0 && dig[1] % 2 != 0){
                             switch(dig[n]){
                             case 0 :
@@ -567,94 +609,147 @@ int main()
                         }//even-odd 15 dig end
                     }//n == 15 if end
                 }//AlphaCGGen loop end
-
-
-
-
-                //Creates lG variables
-                LGX = GX % 10;
-                LGY = GY % 10;
-                LGZ = GZ % 10;
-
-            //Creates RX variables
-            for (int rxc=0; rxc < 10; rxc ++){
-                RX[rxc] = LGX + rxc;
-                if(RX[rxc] > 9){
-                    RX[rxc] = RX[rxc] % 10;
-                }
-            }
-
-            //Creates RY variables
-            for (int ryc=0; ryc < 10; ryc ++){
-                RY[ryc] = LGY + ryc;
-                if(RY[ryc]>9){
-                RY[ryc] = RY[ryc] % 10;
-                }
-            }
-
-            //Creates RZ variables
-            for (int rzc=0; rzc <10; rzc ++){
-                RZ[rzc] = LGZ + rzc;
-                if(RZ[rzc]>9){
-                    RZ[rzc] = RZ[rzc] % 10;
-                }
-            }
-
-            //Create starCalc
-            star1 = (float)RX[dig[5]] * 10;
-            star2 = (float)RY[dig[10]];
-            star3 = (float)RZ[dig[6]] /10;
-            star4 = (float)RX [dig[9]] /100;
-            starCalc = star1 + star2 + star3 + star4;
-
-            //create brownDwarf
-            bd1 = (float)RY[dig[8]] * 10;
-            bd2 = (float)RZ[dig[7]];
-            bd3 = (float)RX[dig[14]] /10;
-            bd4 = (float)RY[dig[11]] /100;
-            brownDwarf = bd1 + bd2 + bd3 + bd4;
-
-            if(starCalc <= 0.40){
-                if(brownDwarf <= 80){starType="Class MV";}
-                else if(brownDwarf <= 88 && brownDwarf > 80){starType="Class KV";}
-                else if(brownDwarf <= 93 && brownDwarf > 88){starType="Class W-D";}
-                else if(brownDwarf <= 96.5 && brownDwarf > 93){starType="Class GV";}
-                else if(brownDwarf <= 98.5 && brownDwarf > 96.5){starType="Class FV";}
-                else if(brownDwarf <=99.2 && brownDwarf > 98){starType="Class AV";}
-                else if(brownDwarf <= 99.6 && brownDwarf > 99.2){starType="Class MIII";}
-                else if(brownDwarf <= 99.9 && brownDwarf > 99.6){starType="EE";}
-                else {starType="Class BV";}
-                //cout << setfill('0') << setw(6) << GX << ":" << GY << ":" << GZ << " | " << setfill('0') << setw(16) << GC << " StarCalc: " << setfill('0') << setw(4) << starCalc << " | Type: " << starType << " | " << alph[0] << alph[1] << alph[2] << alph[3] << alph[4] << alph[5] << alph[6] << alph[7] << alph[8] << alph[9] << alph[10] << alph[11] << alph[12] << alph[13] << alph[14] << alph[15] << " | " << distC << " | " << region << endl;
-                //myfile << setfill('0') << setw(6) << GX << ":" << GY << ":" << GZ << " | " << setfill('0') << setw(16) << GC << " StarCalc: " << setfill('0') << setw(4) << starCalc << " | Type: " << starType << " | " << alph[0] << alph[1] << alph[2] << alph[3] << alph[4] << alph[5] << alph[6] << alph[7] << alph[8] << alph[9] << alph[10] << alph[11] << alph[12] << alph[13] << alph[14] << alph[15] << " | " << distC << " | " << region <<   endl;
-                myfile << setfill('0') << setw(6) << GX << "." <<  GY << "." << GZ << " | GC: " << setfill('0') << setw(16) << GC << setfill(' ') << " | " << setw(9) << starType << " | " << setw(15) << region << " | Distance: " << setw(6) << distC << " | " << alph[0] << alph[1] << alph[2] << alph[3] << alph[4] << alph[5] << alph[6] << alph[7] << alph[8] << alph[9] << alph[10] << alph[11] << alph[12] << alph[13] << alph[14] << alph[15] << endl;
-                //myfile << "Sector: " << hex << HX << "." << HY << "." << HZ << dec << " | Type: " << starType << " | Region: " << region << " | Distance to Galactic Center: " << distC << endl;
-                }
-
-
-            if(starCalc > 0.40){
-                if(starCalc <= 50){bdType="Class L";}
-                if(starCalc > 50){bdType="Class T";}
-                if(brownDwarf <=0.08){
-                  //cout << setfill('0') << setw(6) << GX << ":" << GY << ":" << GZ << " | " << setfill('0') << setw(16) << GC << " BrownDwarf: " << setfill('0') << setw(4) << brownDwarf << " | Type: " << bdType << " | " << alph[0] << alph[1] << alph[2] << alph[3] << alph[4] << alph[5] << alph[6] << alph[7] << alph[8] << alph[9] << alph[10] << alph[11] << alph[12] << alph[13] << alph[14] << alph[15] << " | " << distC << " | " << region <<   endl;
-                  //myfile << setfill('0') << setw(6) << GX << ":" << GY << ":" << GZ << " | " << setfill('0') << setw(16) << GC << " BrownDwarf: " << setfill('0') << setw(4) << brownDwarf << " | Type: " << bdType << " | " << alph[0] << alph[1] << alph[2] << alph[3] << alph[4] << alph[5] << alph[6] << alph[7] << alph[8] << alph[9] << alph[10] << alph[11] << alph[12] << alph[13] << alph[14] << alph[15] << " | " << distC << " | " << region <<   endl;
-                  myfile << setfill('0') << setw(6) << GX << "." <<  GY << "." << GZ << " | GC: " << setfill('0') << setw(16) << GC << setfill(' ') << " | " << setw(9) << bdType << " | " << setw(15) << region << " | Distance: " << setw(6) << distC << " | " << alph[0] << alph[1] << alph[2] << alph[3] << alph[4] << alph[5] << alph[6] << alph[7] << alph[8] << alph[9] << alph[10] << alph[11] << alph[12] << alph[13] << alph[14] << alph[15] << endl;
-                  //myfile << "Sector: " << hex << HX << "." << HY << "." << HZ << dec << " | Type: " << starType << " | Region: " << region << " | Distance to Galactic Center: " << distC << endl;
-                }
-            }
-
-            GZ = GZ + 1;
-            }//ceti loop end
-        GZ = (HZ * 16) + 200000 - 15;
-        GY = GY + 1;
-        }//beta loop end
-    GZ = (HZ * 16) + 200000 - 15;
-    GY = (HY * 16) + 100000 - 15;
-    GX = GX + 1;
-    }
-
-    return 0;
-
-
 }
 
+void alphaBuild()
+{
+    alphaComb.clear();
+    alphaSS.str("");
+    alphaSS << alph[0] << alph[1] << alph[2] << alph[3] << alph[4] << alph[5] << alph[6] << alph[7] << alph[8] << alph[9] << alph[10] << alph[11] << alph[12] << alph[13] << alph[14] << alph[15];
+    alphaComb += alphaSS.str();
+}
 
+void rVariables()
+{
+    //Create L variables, used to craft R variables
+    int LGX;
+    int LGY;
+    int LGZ;
+
+    LGX = GX % 10;
+    LGY = GY % 10;
+    LGZ = GZ % 10;
+
+    //Creates RX variables
+    for (int rxc=0; rxc < 10; rxc ++){
+        RX[rxc] = LGX + rxc;
+        if(RX[rxc] > 9){RX[rxc] = RX[rxc] % 10;}
+        }
+
+    //Creates RY variables
+    for (int ryc=0; ryc < 10; ryc ++){
+        RY[ryc] = LGY + ryc;
+            if(RY[ryc]>9){RY[ryc] = RY[ryc] % 10;}
+        }
+                //Creates RZ variables
+    for (int rzc=0; rzc <10; rzc ++){
+        RZ[rzc] = LGZ + rzc;
+        if(RZ[rzc]>9){RZ[rzc] = RZ[rzc] % 10;}
+        }
+}
+
+void starSearch()
+{
+    float starCalc;
+    float star1;
+    float star2;
+    float star3;
+    float star4;
+    float bd1;
+    float bd2;
+    float bd3;
+    float bd4;
+    float brownDwarf;
+
+    //Create starCalc
+    star1 = (float)RX[dig[5]] * 10;
+    star2 = (float)RY[dig[10]];
+    star3 = (float)RZ[dig[6]] / 10;
+    star4 = (float)RX[dig[9]] / 100;
+    starCalc = star1 + star2 + star3 + star4;
+
+    //create brownDwarf
+    bd1 = (float)RY[dig[8]] * 10;
+    bd2 = (float)RZ[dig[7]];
+    bd3 = (float)RX[dig[14]] /10;
+    bd4 = (float)RY[dig[11]] /100;
+    brownDwarf = bd1 + bd2 + bd3 + bd4;
+
+    if (ssRegion == "Galactic Center"){
+        if(starCalc <= 40){starPresent = "PopII";}
+        else if(brownDwarf <= 8.2){starPresent = "Brown";}
+        else starPresent = "No";
+    }
+    if (ssRegion == "Central Bulge"){
+        if(starCalc <= 4){starPresent = "PopII";}
+        else if(brownDwarf <= 0.8){starPresent = "Brown";}
+        else starPresent = "No";
+    }
+    if (ssRegion == "Thin Disk"){
+        if(starCalc <= 0.40){starPresent = "PopI";}
+        else if(brownDwarf <= 0.08){starPresent = "Brown";}
+        else starPresent = "No";
+    }
+    if (ssRegion == "Thick Disk"){
+        if(starCalc <= 0.20){starPresent = "PopI";}
+        else if(brownDwarf <= 0.04){starPresent = "Brown";}
+        else starPresent = "No";
+    }
+    if (ssRegion == "Galactic Halo"){
+        if(starCalc <= .02){starPresent = "PopII";}
+        else if (brownDwarf <= .01){starPresent = "Brown";}
+        else starPresent = "No";
+    }
+}
+
+void starDefine()
+{
+        float starCalc;
+    float star1;
+    float star2;
+    float star3;
+    float star4;
+    float bd1;
+    float bd2;
+    float bd3;
+    float bd4;
+    float brownDwarf;
+
+    //Create starCalc
+    star1 = (float)RX[dig[5]] * 10;
+    star2 = (float)RY[dig[10]];
+    star3 = (float)RZ[dig[6]] / 10;
+    star4 = (float)RX[dig[9]] / 100;
+    starCalc = star1 + star2 + star3 + star4;
+
+    //create brownDwarf
+    bd1 = (float)RY[dig[8]] * 10;
+    bd2 = (float)RZ[dig[7]];
+    bd3 = (float)RX[dig[14]] /10;
+    bd4 = (float)RY[dig[11]] /100;
+    brownDwarf = bd1 + bd2 + bd3 + bd4;
+
+    if (starPresent == "PopI"){
+        if(brownDwarf <= 80){starType="MV";}
+        else if(brownDwarf <= 88 && brownDwarf > 80){starType="KV";}
+        else if(brownDwarf <= 93 && brownDwarf > 88){starType="WD";}
+        else if(brownDwarf <= 96.5 && brownDwarf > 93){starType="GV";}
+        else if(brownDwarf <= 98.5 && brownDwarf > 96.5){starType="FV";}
+        else if(brownDwarf <=99.2 && brownDwarf > 98){starType="AV";}
+        else if(brownDwarf <= 99.6 && brownDwarf > 99.2){starType="MIII";}
+        else if(brownDwarf <= 99.9 && brownDwarf > 99.6){starType="EE1";}
+        else {starType="BV";}
+    }
+    else if(starPresent == "PopII"){
+        if(brownDwarf <= 40) {starType = "MIII";}
+        else if (brownDwarf <= 80 && brownDwarf > 40) {starType = "MV";}
+        else if (brownDwarf <= 85 && brownDwarf > 80){starType = "KIII";}
+        else if (brownDwarf <= 90 && brownDwarf > 85){starType = "AIII";}
+        else if (brownDwarf <= 95 && brownDwarf > 90){starType = "GIII";}
+        else {starType = "EE2";}
+    }
+    else{
+        if(starCalc <= 50){starType="L";}
+        else {starType = "T";}
+    }
+}
